@@ -16,13 +16,43 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  ThemeMode _themeMode = ThemeMode.dark;
+  ThemeMode _themeMode = ThemeMode.system; // Default to system theme
 
   void _toggleTheme() {
     setState(() {
-      _themeMode =
-          _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+      if (_themeMode == ThemeMode.system) {
+        // If currently system, switch to light
+        _themeMode = ThemeMode.light;
+      } else if (_themeMode == ThemeMode.light) {
+        // If currently light, switch to dark
+        _themeMode = ThemeMode.dark;
+      } else {
+        // If currently dark, switch back to system
+        _themeMode = ThemeMode.system;
+      }
     });
+  }
+
+  String _getThemeModeText() {
+    switch (_themeMode) {
+      case ThemeMode.system:
+        return 'System';
+      case ThemeMode.light:
+        return 'Light';
+      case ThemeMode.dark:
+        return 'Dark';
+    }
+  }
+
+  IconData _getThemeModeIcon() {
+    switch (_themeMode) {
+      case ThemeMode.system:
+        return Icons.brightness_auto;
+      case ThemeMode.light:
+        return Icons.light_mode;
+      case ThemeMode.dark:
+        return Icons.dark_mode;
+    }
   }
 
   @override
@@ -155,6 +185,28 @@ class MainScreen extends StatefulWidget {
   const MainScreen(
       {super.key, required this.onToggleTheme, required this.themeMode});
 
+  String getThemeModeText() {
+    switch (themeMode) {
+      case ThemeMode.system:
+        return 'System';
+      case ThemeMode.light:
+        return 'Light';
+      case ThemeMode.dark:
+        return 'Dark';
+    }
+  }
+
+  IconData getThemeModeIcon() {
+    switch (themeMode) {
+      case ThemeMode.system:
+        return Icons.brightness_auto;
+      case ThemeMode.light:
+        return Icons.light_mode;
+      case ThemeMode.dark:
+        return Icons.dark_mode;
+    }
+  }
+
   @override
   _MainScreenState createState() => _MainScreenState();
 }
@@ -184,12 +236,8 @@ class _MainScreenState extends State<MainScreen> {
         title: Text(_titles[_currentIndex]),
         actions: [
           IconButton(
-            icon: Icon(widget.themeMode == ThemeMode.dark
-                ? Icons.light_mode
-                : Icons.dark_mode),
-            tooltip: widget.themeMode == ThemeMode.dark
-                ? 'Switch to Light Mode'
-                : 'Switch to Dark Mode',
+            icon: Icon(widget.getThemeModeIcon()),
+            tooltip: 'Theme: ${widget.getThemeModeText()}',
             onPressed: widget.onToggleTheme,
           ),
         ],

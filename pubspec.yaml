@@ -1,5 +1,5 @@
-name: multi_calculator
-description: "A new Flutter project."
+name: calcpro
+description: "Calculator Pro: Normal, Birthdate, Data & Numeral Converter"
 publish_to: 'none'
 
 version: 1.0.0+1

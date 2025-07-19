@@ -43,8 +43,11 @@ class _AdvancedCalculatorState extends State<AdvancedCalculator> {
   }
 
   void _handleBackspace() {
-    _equation = _equation.substring(0, _equation.length - 1);
-    if (_equation.isEmpty) _equation = "0";
+    if (_equation.length > 1) {
+      _equation = _equation.substring(0, _equation.length - 1);
+    } else {
+      _equation = "0";
+    }
     _isNewNumber = false;
     _justCalculated = false;
   }
@@ -143,30 +146,11 @@ class _AdvancedCalculatorState extends State<AdvancedCalculator> {
     _justCalculated = false;
   }
 
-  Color _buttonColor(BuildContext context, {Color? light, Color? dark}) {
-    final brightness = Theme.of(context).brightness;
-    if (brightness == Brightness.dark) {
-      return dark ??
-          const Color(0xFF2D2D2D); // Dark gray background for dark mode
-    } else {
-      return light ?? Colors.white;
-    }
-  }
-
-  Color _buttonTextColor(BuildContext context, {Color? light, Color? dark}) {
-    final brightness = Theme.of(context).brightness;
-    if (brightness == Brightness.dark) {
-      return dark ?? Colors.white; // White text for dark mode
-    } else {
-      return light ?? Colors.black87;
-    }
-  }
-
-  Widget _buildButton(String text,
-      {Color? backgroundColor, Color? textColor, bool isWide = false}) {
+  Widget _buildButton(String text, {Color? backgroundColor, Color? textColor}) {
     final theme = Theme.of(context);
-    Color? bg;
-    Color? fg;
+    Color bg;
+    Color fg;
+
     // Use provided color or theme-based color
     if (backgroundColor != null) {
       bg = backgroundColor;
@@ -178,139 +162,64 @@ class _AdvancedCalculatorState extends State<AdvancedCalculator> {
       fg = isDark ? Colors.black : Colors.black87;
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Calculate responsive button size based on available width
-        final availableWidth = constraints.maxWidth;
-        final buttonSize =
-            (availableWidth - 32) / 4; // 4 buttons per row, 32px total margins
-        final minButtonSize = 60.0; // Minimum button size
-        final maxButtonSize = 100.0; // Maximum button size
-        final responsiveButtonSize =
-            buttonSize.clamp(minButtonSize, maxButtonSize);
-
-        // Calculate responsive margin
-        final totalMargin = availableWidth - (responsiveButtonSize * 4);
-        final responsiveMargin =
-            (totalMargin / 5).clamp(4.0, 16.0); // 5 gaps between 4 buttons
-
-        // Calculate responsive font size
-        final responsiveFontSize =
-            (responsiveButtonSize * 0.3).clamp(16.0, 28.0);
-
-        return Container(
-          margin: EdgeInsets.all(responsiveMargin),
-          child: Material(
-            elevation: 4,
-            borderRadius: BorderRadius.circular(16),
-            color: bg,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: () => _buttonPressed(text),
-              child: Container(
-                width: responsiveButtonSize,
-                height: responsiveButtonSize,
-                decoration: BoxDecoration(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: Colors.transparent,
-                    width: 1,
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    text,
-                    style: TextStyle(
-                      fontSize: responsiveFontSize,
-                      fontWeight: FontWeight.w600,
-                      color: fg,
-                    ),
-                  ),
+    return Container(
+      margin:
+          const EdgeInsets.all(2.0), // Consistent 2px margin for uniform gaps
+      child: Material(
+        elevation: 2,
+        borderRadius:
+            BorderRadius.circular(10), // Adjusted to match image (10-12px)
+        color: bg,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10), // Adjusted to match image
+          onTap: () => _buttonPressed(text),
+          child: Container(
+            width: double.infinity,
+            height: 50,
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              borderRadius:
+                  BorderRadius.circular(10), // Adjusted to match image
+              border: Border.all(
+                color: Colors.transparent,
+                width: 1,
+              ),
+            ),
+            child: Center(
+              child: Text(
+                text,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: fg,
                 ),
               ),
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      color: theme.scaffoldBackgroundColor,
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          // Display Section
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final availableWidth = constraints.maxWidth;
-              final responsivePadding =
-                  (availableWidth * 0.05).clamp(16.0, 32.0);
-              final responsiveMargin =
-                  (availableWidth * 0.02).clamp(12.0, 24.0);
-              final responsiveFontSize =
-                  (availableWidth * 0.06).clamp(20.0, 32.0);
-              final responsiveResultFontSize =
-                  (availableWidth * 0.12).clamp(36.0, 56.0);
 
-              return Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(responsivePadding),
-                margin: EdgeInsets.only(bottom: responsiveMargin),
-                decoration: BoxDecoration(
-                  color: theme.cardColor,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Text(
-                        _equation,
-                        style: TextStyle(
-                          fontSize: responsiveFontSize,
-                          color: theme.hintColor,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: responsivePadding * 0.3),
-                    Text(
-                      _result,
-                      style: TextStyle(
-                        fontSize: responsiveResultFontSize,
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-          // Buttons Section
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // Calculate responsive spacing based on available height
-                final availableHeight = constraints.maxHeight;
-                final responsiveRowSpacing =
-                    (availableHeight * 0.02).clamp(8.0, 20.0);
-
-                return Container(
-                  padding: EdgeInsets.all(16),
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment:
+                MainAxisAlignment.end, // Align both containers to bottom
+            children: [
+              // Display Section
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20.0),
+                  margin: const EdgeInsets.only(bottom: 16.0),
                   decoration: BoxDecoration(
                     color: theme.cardColor,
                     borderRadius: BorderRadius.circular(20),
@@ -323,96 +232,157 @@ class _AdvancedCalculatorState extends State<AdvancedCalculator> {
                     ],
                   ),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisAlignment:
+                        MainAxisAlignment.end, // Align text to bottom
                     children: [
-                      // First Row
-                      Expanded(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            _buildButton("C",
-                                backgroundColor: Colors.redAccent,
-                                textColor: Colors.white),
-                            _buildButton("⌫",
-                                backgroundColor: Colors.orange,
-                                textColor: Colors.white),
-                            _buildButton("x²",
-                                backgroundColor: theme.colorScheme.primary,
-                                textColor: Colors.white),
-                            _buildButton("÷",
-                                backgroundColor: theme.colorScheme.primary,
-                                textColor: Colors.white),
-                          ],
+                      // Equation display with text wrapping
+                      Flexible(
+                        child: Container(
+                          width: double.infinity,
+                          child: Text(
+                            _equation,
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: theme.hintColor,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            textAlign: TextAlign.end,
+                            maxLines: null, // Allow unlimited lines
+                            overflow: TextOverflow.visible,
+                          ),
                         ),
                       ),
-                      SizedBox(height: responsiveRowSpacing),
-                      // Second Row
-                      Expanded(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            _buildButton("7"),
-                            _buildButton("8"),
-                            _buildButton("9"),
-                            _buildButton("×",
-                                backgroundColor: theme.colorScheme.primary,
-                                textColor: Colors.white),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: responsiveRowSpacing),
-                      // Third Row
-                      Expanded(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            _buildButton("4"),
-                            _buildButton("5"),
-                            _buildButton("6"),
-                            _buildButton("-",
-                                backgroundColor: theme.colorScheme.primary,
-                                textColor: Colors.white),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: responsiveRowSpacing),
-                      // Fourth Row
-                      Expanded(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            _buildButton("1"),
-                            _buildButton("2"),
-                            _buildButton("3"),
-                            _buildButton("+",
-                                backgroundColor: theme.colorScheme.primary,
-                                textColor: Colors.white),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: responsiveRowSpacing),
-                      // Fifth Row
-                      Expanded(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            _buildButton("√",
-                                backgroundColor: theme.colorScheme.primary,
-                                textColor: Colors.white),
-                            _buildButton("0"),
-                            _buildButton("."),
-                            _buildButton("=",
-                                backgroundColor: Colors.green,
-                                textColor: Colors.white),
-                          ],
+                      const SizedBox(height: 8),
+                      // Result display with auto-scroll
+                      Container(
+                        height: 50,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          reverse: true,
+                          child: Text(
+                            _result,
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
                         ),
                       ),
                     ],
                   ),
-                );
-              },
-            ),
+                ),
+              ),
+
+              // Buttons Section
+              Container(
+                height: 320, // Fixed height of 320px
+                padding: const EdgeInsets.all(
+                    8), // Reduced padding for tighter layout
+                decoration: BoxDecoration(
+                  color: theme.cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisAlignment:
+                      MainAxisAlignment.end, // Align buttons to bottom
+                  children: [
+                    // First Row
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Expanded(
+                              child: _buildButton("C",
+                                  backgroundColor: Colors.redAccent,
+                                  textColor: Colors.white)),
+                          Expanded(
+                              child: _buildButton("⌫",
+                                  backgroundColor: Colors.orange,
+                                  textColor: Colors.white)),
+                          Expanded(
+                              child: _buildButton("x²",
+                                  backgroundColor: theme.colorScheme.primary,
+                                  textColor: Colors.white)),
+                          Expanded(
+                              child: _buildButton("÷",
+                                  backgroundColor: theme.colorScheme.primary,
+                                  textColor: Colors.white)),
+                        ],
+                      ),
+                    ),
+                    // Second Row
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Expanded(child: _buildButton("7")),
+                          Expanded(child: _buildButton("8")),
+                          Expanded(child: _buildButton("9")),
+                          Expanded(
+                              child: _buildButton("×",
+                                  backgroundColor: theme.colorScheme.primary,
+                                  textColor: Colors.white)),
+                        ],
+                      ),
+                    ),
+                    // Third Row
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Expanded(child: _buildButton("4")),
+                          Expanded(child: _buildButton("5")),
+                          Expanded(child: _buildButton("6")),
+                          Expanded(
+                              child: _buildButton("-",
+                                  backgroundColor: theme.colorScheme.primary,
+                                  textColor: Colors.white)),
+                        ],
+                      ),
+                    ),
+                    // Fourth Row
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Expanded(child: _buildButton("1")),
+                          Expanded(child: _buildButton("2")),
+                          Expanded(child: _buildButton("3")),
+                          Expanded(
+                              child: _buildButton("+",
+                                  backgroundColor: theme.colorScheme.primary,
+                                  textColor: Colors.white)),
+                        ],
+                      ),
+                    ),
+                    // Fifth Row
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Expanded(
+                              child: _buildButton("√",
+                                  backgroundColor: theme.colorScheme.primary,
+                                  textColor: Colors.white)),
+                          Expanded(child: _buildButton("0")),
+                          Expanded(child: _buildButton(".")),
+                          Expanded(
+                              child: _buildButton("=",
+                                  backgroundColor: Colors.green,
+                                  textColor: Colors.white)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
