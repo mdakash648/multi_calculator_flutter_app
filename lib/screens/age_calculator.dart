@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class AgeCalculator extends StatefulWidget {
   const AgeCalculator({super.key});
@@ -88,6 +90,39 @@ class _AgeCalculatorState extends State<AgeCalculator> {
     Duration nextBdayDuration = nextBirthday.difference(today);
     nextBirthdayDays = nextBdayDuration.inDays;
     nextBirthdayMonth = DateFormat('MMMM').format(nextBirthday);
+
+    // Save to history
+    _saveToHistory();
+  }
+
+  Future<void> _saveToHistory() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final historyJson = prefs.getStringList('calculation_history') ?? [];
+
+      final birthDate = DateFormat('dd MMMM yyyy').format(_selectedDate!);
+      final ageResult = '$years years, $months months, $days days';
+
+      final historyItem = {
+        'equation': 'Birth Date: $birthDate',
+        'result': ageResult,
+        'timestamp': DateFormat('MMM dd, yyyy HH:mm').format(DateTime.now()),
+        'type': 'age',
+      };
+
+      // Add new item to the beginning of the list
+      historyJson.insert(0, jsonEncode(historyItem));
+
+      // Keep only the last 100 items
+      if (historyJson.length > 100) {
+        historyJson.removeRange(100, historyJson.length);
+      }
+
+      await prefs.setStringList('calculation_history', historyJson);
+    } catch (e) {
+      // Silently fail if history saving fails
+      print('Failed to save to history: $e');
+    }
   }
 
   @override

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'package:intl/intl.dart';
 
 class NumeralConverterScreen extends StatefulWidget {
   @override
@@ -29,8 +32,43 @@ class _NumeralConverterScreenState extends State<NumeralConverterScreen> {
       String result =
           decimalValue.toRadixString(baseMap[_toBase]!).toUpperCase();
       setState(() => _output = result);
+
+      // Save to history if conversion is successful
+      if (result != "Invalid Input") {
+        _saveToHistory(input, result);
+      }
     } catch (e) {
       setState(() => _output = "Invalid Input");
+    }
+  }
+
+  Future<void> _saveToHistory(String input, String result) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final historyJson = prefs.getStringList('calculation_history') ?? [];
+
+      final equation = '$_fromBase: $input';
+      final resultText = '$_toBase: $result';
+
+      final historyItem = {
+        'equation': equation,
+        'result': resultText,
+        'timestamp': DateFormat('MMM dd, yyyy HH:mm').format(DateTime.now()),
+        'type': 'numeral',
+      };
+
+      // Add new item to the beginning of the list
+      historyJson.insert(0, jsonEncode(historyItem));
+
+      // Keep only the last 100 items
+      if (historyJson.length > 100) {
+        historyJson.removeRange(100, historyJson.length);
+      }
+
+      await prefs.setStringList('calculation_history', historyJson);
+    } catch (e) {
+      // Silently fail if history saving fails
+      print('Failed to save to history: $e');
     }
   }
 

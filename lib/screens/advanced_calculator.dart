@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:math_expressions/math_expressions.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math';
+import 'dart:convert';
+import 'package:intl/intl.dart';
 
 class AdvancedCalculator extends StatefulWidget {
   @override
@@ -65,8 +68,38 @@ class _AdvancedCalculatorState extends State<AdvancedCalculator> {
       _equation = _result;
       _isNewNumber = true;
       _justCalculated = true;
+
+      // Save to history
+      _saveToHistory(expression, _result);
     } catch (e) {
       _showError();
+    }
+  }
+
+  Future<void> _saveToHistory(String equation, String result) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final historyJson = prefs.getStringList('calculation_history') ?? [];
+
+      final historyItem = {
+        'equation': equation,
+        'result': result,
+        'timestamp': DateFormat('MMM dd, yyyy HH:mm').format(DateTime.now()),
+        'type': 'calculator',
+      };
+
+      // Add new item to the beginning of the list
+      historyJson.insert(0, jsonEncode(historyItem));
+
+      // Keep only the last 100 items
+      if (historyJson.length > 100) {
+        historyJson.removeRange(100, historyJson.length);
+      }
+
+      await prefs.setStringList('calculation_history', historyJson);
+    } catch (e) {
+      // Silently fail if history saving fails
+      print('Failed to save to history: $e');
     }
   }
 

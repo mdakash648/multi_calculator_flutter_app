@@ -3,6 +3,7 @@ import 'screens/advanced_calculator.dart';
 import 'screens/age_calculator.dart';
 import 'screens/data_converter.dart';
 import 'screens/numeral_system.dart';
+import 'screens/history_screen.dart'; // Added import for HistoryScreen
 
 void main() {
   runApp(const MyApp());
@@ -219,6 +220,7 @@ class _MainScreenState extends State<MainScreen> {
     AgeCalculator(),
     DataConverterApp(),
     NumeralConverterScreen(),
+    HistoryScreen(), // Add history screen
   ];
 
   final List<String> _titles = [
@@ -226,6 +228,7 @@ class _MainScreenState extends State<MainScreen> {
     'Age Calculator',
     'Data Converter',
     'Numeral Converter',
+    'History', // Add history title
   ];
 
   @override
@@ -276,6 +279,11 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(Icons.transform_outlined),
             activeIcon: Icon(Icons.transform),
             label: 'Numeral',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.history_outlined),
+            activeIcon: Icon(Icons.history),
+            label: 'History',
           ),
         ],
       ),

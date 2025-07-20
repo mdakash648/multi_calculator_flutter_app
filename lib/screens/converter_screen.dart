@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'conversion_logic.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'package:intl/intl.dart';
 
 class ConverterScreen extends StatefulWidget {
   @override
@@ -26,6 +29,42 @@ class _ConverterScreenState extends State<ConverterScreen> {
     setState(() {
       _controller2.text = convertData(value, _fromUnit, _toUnit).toString();
     });
+
+    // Save to history if there's a valid conversion
+    if (value > 0 && _controller1.text.isNotEmpty) {
+      _saveToHistory(value);
+    }
+  }
+
+  Future<void> _saveToHistory(double value) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final historyJson = prefs.getStringList('calculation_history') ?? [];
+
+      final result = convertData(value, _fromUnit, _toUnit);
+      final equation = '$value $_fromUnit';
+      final resultText = '${result.toStringAsFixed(4)} $_toUnit';
+
+      final historyItem = {
+        'equation': equation,
+        'result': resultText,
+        'timestamp': DateFormat('MMM dd, yyyy HH:mm').format(DateTime.now()),
+        'type': 'data',
+      };
+
+      // Add new item to the beginning of the list
+      historyJson.insert(0, jsonEncode(historyItem));
+
+      // Keep only the last 100 items
+      if (historyJson.length > 100) {
+        historyJson.removeRange(100, historyJson.length);
+      }
+
+      await prefs.setStringList('calculation_history', historyJson);
+    } catch (e) {
+      // Silently fail if history saving fails
+      print('Failed to save to history: $e');
+    }
   }
 
   void _clearFields() {
