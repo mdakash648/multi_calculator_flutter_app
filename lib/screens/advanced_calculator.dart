@@ -191,24 +191,23 @@ class _AdvancedCalculatorState extends State<AdvancedCalculator> {
     } else {
       // Number button: use #B0B0B0 in dark mode, white in light mode
       final isDark = theme.brightness == Brightness.dark;
-      bg = isDark ? const Color(0xFFB0B0B0) : Colors.white;
+      bg = isDark ? const Color.fromARGB(255, 245, 239, 239) : Colors.white;
       fg = isDark ? Colors.black : Colors.black87;
     }
 
     return Container(
-      margin:
-          const EdgeInsets.all(2.0), // Consistent 2px margin for uniform gaps
+      margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
       child: Material(
         elevation: 2,
         borderRadius:
-            BorderRadius.circular(10), // Adjusted to match image (10-12px)
+            BorderRadius.circular(20), // Adjusted to match image (10-12px)
         color: bg,
         child: InkWell(
-          borderRadius: BorderRadius.circular(10), // Adjusted to match image
+          borderRadius: BorderRadius.circular(20), // Adjusted to match image
           onTap: () => _buttonPressed(text),
           child: Container(
             width: double.infinity,
-            height: 50,
+            height: 62,
             decoration: BoxDecoration(
               color: Colors.transparent,
               borderRadius:
@@ -222,7 +221,7 @@ class _AdvancedCalculatorState extends State<AdvancedCalculator> {
               child: Text(
                 text,
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 25,
                   fontWeight: FontWeight.w600,
                   color: fg,
                 ),
@@ -276,7 +275,7 @@ class _AdvancedCalculatorState extends State<AdvancedCalculator> {
                           child: Text(
                             _equation,
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 25,
                               color: theme.hintColor,
                               fontWeight: FontWeight.w500,
                             ),
@@ -296,7 +295,7 @@ class _AdvancedCalculatorState extends State<AdvancedCalculator> {
                           child: Text(
                             _result,
                             style: TextStyle(
-                              fontSize: 32,
+                              fontSize: 35,
                               fontWeight: FontWeight.bold,
                               color: theme.colorScheme.primary,
                             ),
@@ -310,7 +309,7 @@ class _AdvancedCalculatorState extends State<AdvancedCalculator> {
 
               // Buttons Section
               Container(
-                height: 320, // Fixed height of 320px
+                height: 350, // Fixed height of 400px
                 padding: const EdgeInsets.all(
                     8), // Reduced padding for tighter layout
                 decoration: BoxDecoration(
@@ -319,7 +318,7 @@ class _AdvancedCalculatorState extends State<AdvancedCalculator> {
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
+                      blurRadius: 0,
                       offset: const Offset(0, 4),
                     ),
                   ],
