@@ -220,7 +220,6 @@ class _MainScreenState extends State<MainScreen> {
     AgeCalculator(),
     DataConverterApp(),
     NumeralConverterScreen(),
-    HistoryScreen(), // Add history screen
   ];
 
   final List<String> _titles = [
@@ -228,14 +227,26 @@ class _MainScreenState extends State<MainScreen> {
     'Age Calculator',
     'Data Converter',
     'Numeral Converter',
-    'History', // Add history title
   ];
+
+  void _navigateToHistory() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => HistoryScreen(),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.history),
+          onPressed: _navigateToHistory,
+          tooltip: 'View History',
+        ),
         title: Text(_titles[_currentIndex]),
         actions: [
           IconButton(
@@ -279,11 +290,6 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(Icons.transform_outlined),
             activeIcon: Icon(Icons.transform),
             label: 'Numeral',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history_outlined),
-            activeIcon: Icon(Icons.history),
-            label: 'History',
           ),
         ],
       ),
