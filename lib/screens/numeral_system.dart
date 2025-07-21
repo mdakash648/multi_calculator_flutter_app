@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
 
 class NumeralConverterScreen extends StatefulWidget {
   final Key? key;
@@ -89,6 +90,32 @@ class NumeralConverterScreenState extends State<NumeralConverterScreen> {
       // Silently fail if history saving fails
       print('Failed to save to history: $e');
     }
+  }
+
+  SnackBar buildModernSnackBar(BuildContext context, String message,
+      {Color? backgroundColor}) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final bgColor = backgroundColor ??
+        (isDark ? const Color(0xFF23243A) : const Color(0xFFF8F9FA));
+    final textColor = isDark ? Colors.white : Colors.black;
+    return SnackBar(
+      content: Center(
+        heightFactor: 1,
+        child: Text(
+          message,
+          style: TextStyle(
+              fontSize: 16, fontWeight: FontWeight.w600, color: textColor),
+          textAlign: TextAlign.center,
+        ),
+      ),
+      backgroundColor: bgColor,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      margin: const EdgeInsets.fromLTRB(40, 20, 40, 0), // Top position
+      elevation: 8,
+      duration: const Duration(seconds: 2),
+    );
   }
 
   @override
@@ -251,21 +278,34 @@ class NumeralConverterScreenState extends State<NumeralConverterScreen> {
               ),
               const SizedBox(height: 32),
               // Output area
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-                decoration: BoxDecoration(
-                  color: cardColor,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: borderColor),
-                ),
-                child: Text(
-                  "Output: ${_output.isEmpty ? '' : _output}",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 24,
-                    color: outputLabelColor,
-                    decoration: TextDecoration.none,
+              GestureDetector(
+                onLongPress: () async {
+                  if (_output.isNotEmpty) {
+                    await Clipboard.setData(ClipboardData(text: _output));
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        buildModernSnackBar(
+                            context, 'Result copied to clipboard'),
+                      );
+                    }
+                  }
+                },
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: cardColor,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: borderColor),
+                  ),
+                  child: Text(
+                    "Output: ${_output.isEmpty ? '' : _output}",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24,
+                      color: outputLabelColor,
+                      decoration: TextDecoration.none,
+                    ),
                   ),
                 ),
               ),

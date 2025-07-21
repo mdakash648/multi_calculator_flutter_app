@@ -3,6 +3,10 @@
 #include <optional>
 
 #include "flutter/generated_plugin_registrant.h"
+#include <flutter/method_channel.h>
+#include <flutter/standard_method_codec.h>
+#include <memory>
+#include <variant>
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
     : project_(project) {}
@@ -15,16 +19,16 @@ bool FlutterWindow::OnCreate() {
   }
 
   RECT frame = GetClientArea();
+  int width = frame.right - frame.left;
+  int height = frame.bottom - frame.top;
 
-  // The size here must match the window dimensions to avoid unnecessary surface
-  // creation / destruction in the startup path.
   flutter_controller_ = std::make_unique<flutter::FlutterViewController>(
-      frame.right - frame.left, frame.bottom - frame.top, project_);
+      width, height, project_);
   // Ensure that basic setup of the controller was successful.
-  if (!flutter_controller_->engine() || !flutter_controller_->view()) {
+  if (!flutter_controller_->engine() ||
+      !flutter_controller_->view()) {
     return false;
   }
-  RegisterPlugins(flutter_controller_->engine());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
@@ -33,8 +37,34 @@ bool FlutterWindow::OnCreate() {
 
   // Flutter can complete the first frame before the "show window" callback is
   // registered. The following call ensures a frame is pending to ensure the
-  // window is shown. It is a no-op if the first frame hasn't completed yet.
+  // window is shown. It is a no-op if the frame is already complete.
   flutter_controller_->ForceRedraw();
+
+  // Setup MethodChannel for always-on-top
+  auto messenger = flutter_controller_->engine()->messenger();
+  auto channel = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+      messenger, "multi_calculator/always_on_top",
+      &flutter::StandardMethodCodec::GetInstance());
+  channel->SetMethodCallHandler(
+      [this](const auto& call, auto result) {
+        if (call.method_name() == "setAlwaysOnTop") {
+          const auto* args = std::get_if<flutter::EncodableMap>(call.arguments());
+          if (args) {
+            auto it = args->find(flutter::EncodableValue("value"));
+            if (it != args->end() && std::holds_alternative<bool>(it->second)) {
+              bool value = std::get<bool>(it->second);
+              SetAlwaysOnTop(value);
+              result->Success();
+              return;
+            }
+          }
+          result->Error("bad_args", "Missing or invalid arguments");
+        } else {
+          result->NotImplemented();
+        }
+      });
+  // Keep channel alive
+  static auto* channel_ptr = channel.release();
 
   return true;
 }

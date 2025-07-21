@@ -293,3 +293,13 @@ void Win32Window::UpdateTheme(HWND const window) {
                           &enable_dark_mode, sizeof(enable_dark_mode));
   }
 }
+
+void Win32Window::SetAlwaysOnTop(bool always_on_top) {
+  always_on_top_ = always_on_top;
+  if (window_handle_) {
+    SetWindowPos(window_handle_,
+                 always_on_top ? HWND_TOPMOST : HWND_NOTOPMOST,
+                 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE);
+  }
+}

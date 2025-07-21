@@ -5,6 +5,8 @@ import 'screens/data_converter.dart';
 import 'screens/numeral_system.dart';
 import 'screens/history_screen.dart'; // Added import for HistoryScreen
 import 'screens/converter_screen.dart';
+import 'dart:io';
+import 'package:flutter/services.dart';
 
 void main() {
   runApp(const MyApp());
@@ -181,6 +183,18 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
+class AlwaysOnTopController {
+  static const MethodChannel _channel =
+      MethodChannel('multi_calculator/always_on_top');
+  static Future<void> setAlwaysOnTop(bool value) async {
+    try {
+      await _channel.invokeMethod('setAlwaysOnTop', {'value': value});
+    } catch (e) {
+      // ignore
+    }
+  }
+}
+
 class MainScreen extends StatefulWidget {
   final VoidCallback onToggleTheme;
   final ThemeMode themeMode;
@@ -214,6 +228,7 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
+  bool _alwaysOnTop = false;
   int _currentIndex = 0;
 
   AdvancedCalculatorState? _calculatorState;
@@ -296,6 +311,20 @@ class _MainScreenState extends State<MainScreen> {
             tooltip: 'Theme: ${widget.getThemeModeText()}',
             onPressed: widget.onToggleTheme,
           ),
+          if (Platform.isWindows)
+            IconButton(
+              icon:
+                  Icon(_alwaysOnTop ? Icons.push_pin : Icons.push_pin_outlined),
+              tooltip: _alwaysOnTop
+                  ? 'Disable Always on Top'
+                  : 'Enable Always on Top',
+              onPressed: () async {
+                setState(() {
+                  _alwaysOnTop = !_alwaysOnTop;
+                });
+                await AlwaysOnTopController.setAlwaysOnTop(_alwaysOnTop);
+              },
+            ),
         ],
       ),
       body: Container(

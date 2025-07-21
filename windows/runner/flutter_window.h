@@ -15,6 +15,8 @@ class FlutterWindow : public Win32Window {
   explicit FlutterWindow(const flutter::DartProject& project);
   virtual ~FlutterWindow();
 
+  void SetAlwaysOnTop(bool always_on_top) { Win32Window::SetAlwaysOnTop(always_on_top); }
+
  protected:
   // Win32Window:
   bool OnCreate() override;

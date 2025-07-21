@@ -68,11 +68,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
           _historyItems.clear();
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('History cleared successfully')),
+          buildModernSnackBar(context, 'History cleared successfully'),
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to clear history')),
+          buildModernSnackBar(context, 'Failed to clear history',
+              backgroundColor: Colors.redAccent),
         );
       }
     }
@@ -91,11 +92,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
       setState(() {});
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Item deleted from history')),
+        buildModernSnackBar(context, 'Item deleted from history'),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete item')),
+        buildModernSnackBar(context, 'Failed to delete item',
+            backgroundColor: Colors.redAccent),
       );
     }
   }
@@ -154,7 +156,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             _historyItems.map((item) => jsonEncode(item.toJson())).toList();
         await prefs.setStringList('calculation_history', historyJson);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('History item updated')),
+          buildModernSnackBar(context, 'History item updated'),
         );
       }
     }
@@ -332,4 +334,30 @@ class HistoryItem {
       type: json['type'] ?? 'calculator',
     );
   }
+}
+
+SnackBar buildModernSnackBar(BuildContext context, String message,
+    {Color? backgroundColor}) {
+  final theme = Theme.of(context);
+  final isDark = theme.brightness == Brightness.dark;
+  final bgColor = backgroundColor ??
+      (isDark ? const Color(0xFF23243A) : const Color(0xFFF8F9FA));
+  final textColor = isDark ? Colors.white : Colors.black;
+  return SnackBar(
+    content: Center(
+      heightFactor: 1,
+      child: Text(
+        message,
+        style: TextStyle(
+            fontSize: 16, fontWeight: FontWeight.w600, color: textColor),
+        textAlign: TextAlign.center,
+      ),
+    ),
+    backgroundColor: bgColor,
+    behavior: SnackBarBehavior.floating,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    margin: const EdgeInsets.fromLTRB(40, 20, 40, 0), // Top position
+    elevation: 8,
+    duration: const Duration(seconds: 2),
+  );
 }

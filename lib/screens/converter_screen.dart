@@ -3,6 +3,7 @@ import 'conversion_logic.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
 
 class ConverterScreen extends StatefulWidget {
   final Key? key;
@@ -216,28 +217,44 @@ class ConverterScreenState extends State<ConverterScreen> {
                 ),
                 const SizedBox(width: 28),
                 Expanded(
-                  child: TextField(
-                    controller: _controller2,
-                    readOnly: true,
-                    style: TextStyle(color: textFieldText),
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: textFieldBg,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: textFieldBorder),
+                  child: GestureDetector(
+                    onLongPress: () async {
+                      final value = _controller2.text;
+                      if (value.isNotEmpty) {
+                        await Clipboard.setData(ClipboardData(text: value));
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            buildModernSnackBar(
+                                context, 'Result copied to clipboard'),
+                          );
+                        }
+                      }
+                    },
+                    child: AbsorbPointer(
+                      child: TextField(
+                        controller: _controller2,
+                        readOnly: true,
+                        style: TextStyle(color: textFieldText),
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: textFieldBg,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: textFieldBorder),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: textFieldBorder),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide:
+                                BorderSide(color: textFieldBorder, width: 2),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                        ),
                       ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: textFieldBorder),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide:
-                            BorderSide(color: textFieldBorder, width: 2),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
                     ),
                   ),
                 ),
@@ -286,4 +303,30 @@ class ConverterScreenState extends State<ConverterScreen> {
       ),
     );
   }
+}
+
+SnackBar buildModernSnackBar(BuildContext context, String message,
+    {Color? backgroundColor}) {
+  final theme = Theme.of(context);
+  final isDark = theme.brightness == Brightness.dark;
+  final bgColor = backgroundColor ??
+      (isDark ? const Color(0xFF23243A) : const Color(0xFFF8F9FA));
+  final textColor = isDark ? Colors.white : Colors.black;
+  return SnackBar(
+    content: Center(
+      heightFactor: 1,
+      child: Text(
+        message,
+        style: TextStyle(
+            fontSize: 16, fontWeight: FontWeight.w600, color: textColor),
+        textAlign: TextAlign.center,
+      ),
+    ),
+    backgroundColor: bgColor,
+    behavior: SnackBarBehavior.floating,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    margin: const EdgeInsets.fromLTRB(40, 20, 40, 0), // Top position
+    elevation: 8,
+    duration: const Duration(seconds: 2),
+  );
 }
