@@ -5,11 +5,13 @@ import 'dart:convert';
 import 'package:intl/intl.dart';
 
 class ConverterScreen extends StatefulWidget {
+  final Key? key;
+  ConverterScreen({this.key}) : super(key: key);
   @override
-  _ConverterScreenState createState() => _ConverterScreenState();
+  ConverterScreenState createState() => ConverterScreenState();
 }
 
-class _ConverterScreenState extends State<ConverterScreen> {
+class ConverterScreenState extends State<ConverterScreen> {
   final TextEditingController _controller1 = TextEditingController();
   final TextEditingController _controller2 = TextEditingController();
   String _fromUnit = "Megabyte";
@@ -81,6 +83,23 @@ class _ConverterScreenState extends State<ConverterScreen> {
       _toUnit = temp;
       _updateConversion();
     });
+  }
+
+  void setDataFromHistory(String equation, String result) {
+    // equation: '123 Megabyte', result: '0.1201 Gigabyte'
+    final eqMatch = RegExp(r'([\d.]+) ([A-Za-z]+)').firstMatch(equation);
+    final resMatch = RegExp(r'([\d.]+) ([A-Za-z]+)').firstMatch(result);
+    if (eqMatch != null && resMatch != null) {
+      final value = eqMatch.group(1);
+      final fromUnit = eqMatch.group(2);
+      final toUnit = resMatch.group(2);
+      setState(() {
+        _controller1.text = value ?? '';
+        _fromUnit = fromUnit ?? units.first;
+        _toUnit = toUnit ?? units.last;
+        _updateConversion();
+      });
+    }
   }
 
   @override

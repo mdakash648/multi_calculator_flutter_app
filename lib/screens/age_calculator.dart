@@ -7,10 +7,10 @@ class AgeCalculator extends StatefulWidget {
   const AgeCalculator({super.key});
 
   @override
-  _AgeCalculatorState createState() => _AgeCalculatorState();
+  AgeCalculatorState createState() => AgeCalculatorState();
 }
 
-class _AgeCalculatorState extends State<AgeCalculator> {
+class AgeCalculatorState extends State<AgeCalculator> {
   DateTime? _selectedDate;
   int? years, months, days;
   int? nextBirthdayDays;
@@ -122,6 +122,24 @@ class _AgeCalculatorState extends State<AgeCalculator> {
     } catch (e) {
       // Silently fail if history saving fails
       print('Failed to save to history: $e');
+    }
+  }
+
+  void setBirthDateFromHistory(String equation) {
+    // equation is like 'Birth Date: 01 January 2000'
+    final regex = RegExp(r'Birth Date: (.+)');
+    final match = regex.firstMatch(equation);
+    if (match != null) {
+      final dateStr = match.group(1);
+      try {
+        final date = DateFormat('dd MMMM yyyy').parse(dateStr!);
+        setState(() {
+          _selectedDate = date;
+          _calculateAge();
+        });
+      } catch (e) {
+        // ignore parse error
+      }
     }
   }
 

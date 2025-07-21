@@ -4,6 +4,7 @@ import 'screens/age_calculator.dart';
 import 'screens/data_converter.dart';
 import 'screens/numeral_system.dart';
 import 'screens/history_screen.dart'; // Added import for HistoryScreen
+import 'screens/converter_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -215,12 +216,29 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [
-    AdvancedCalculator(),
-    AgeCalculator(),
-    DataConverterApp(),
-    NumeralConverterScreen(),
-  ];
+  AdvancedCalculatorState? _calculatorState;
+  final GlobalKey<AgeCalculatorState> _ageKey = GlobalKey<AgeCalculatorState>();
+  final GlobalKey<ConverterScreenState> _converterKey =
+      GlobalKey<ConverterScreenState>();
+  final GlobalKey<NumeralConverterScreenState> _numeralKey =
+      GlobalKey<NumeralConverterScreenState>();
+
+  late final List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      AdvancedCalculator(
+        onCalculatorCreated: (state) {
+          _calculatorState = state;
+        },
+      ),
+      AgeCalculator(key: _ageKey),
+      ConverterScreen(key: _converterKey),
+      NumeralConverterScreen(key: _numeralKey),
+    ];
+  }
 
   final List<String> _titles = [
     'Advanced Calculator',
@@ -229,10 +247,34 @@ class _MainScreenState extends State<MainScreen> {
     'Numeral Converter',
   ];
 
-  void _navigateToHistory() {
-    Navigator.of(context).push(
+  void _navigateToHistory() async {
+    await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => HistoryScreen(),
+        builder: (context) => HistoryScreen(
+          onSelectHistory: (type, equation, result) {
+            if (type == 'calculator') {
+              setState(() {
+                _currentIndex = 0;
+              });
+              _calculatorState?.setEquationFromHistory(equation);
+            } else if (type == 'age') {
+              setState(() {
+                _currentIndex = 1;
+              });
+              _ageKey.currentState?.setBirthDateFromHistory(equation);
+            } else if (type == 'data') {
+              setState(() {
+                _currentIndex = 2;
+              });
+              _converterKey.currentState?.setDataFromHistory(equation, result);
+            } else if (type == 'numeral') {
+              setState(() {
+                _currentIndex = 3;
+              });
+              _numeralKey.currentState?.setNumeralFromHistory(equation, result);
+            }
+          },
+        ),
       ),
     );
   }
@@ -287,8 +329,8 @@ class _MainScreenState extends State<MainScreen> {
             label: 'Data',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.transform_outlined),
-            activeIcon: Icon(Icons.transform),
+            icon: Icon(Icons.format_list_numbered_outlined),
+            activeIcon: Icon(Icons.format_list_numbered),
             label: 'Numeral',
           ),
         ],

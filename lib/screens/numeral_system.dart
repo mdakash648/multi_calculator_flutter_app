@@ -4,11 +4,13 @@ import 'dart:convert';
 import 'package:intl/intl.dart';
 
 class NumeralConverterScreen extends StatefulWidget {
+  final Key? key;
+  NumeralConverterScreen({this.key}) : super(key: key);
   @override
-  _NumeralConverterScreenState createState() => _NumeralConverterScreenState();
+  NumeralConverterScreenState createState() => NumeralConverterScreenState();
 }
 
-class _NumeralConverterScreenState extends State<NumeralConverterScreen> {
+class NumeralConverterScreenState extends State<NumeralConverterScreen> {
   final TextEditingController _inputController = TextEditingController();
   String _output = "";
   String _fromBase = "Decimal";
@@ -39,6 +41,23 @@ class _NumeralConverterScreenState extends State<NumeralConverterScreen> {
       }
     } catch (e) {
       setState(() => _output = "Invalid Input");
+    }
+  }
+
+  void setNumeralFromHistory(String equation, String result) {
+    // equation: 'Decimal: 123', result: 'Binary: 1111011'
+    final eqMatch = RegExp(r'([A-Za-z]+): (.+)').firstMatch(equation);
+    final resMatch = RegExp(r'([A-Za-z]+): (.+)').firstMatch(result);
+    if (eqMatch != null && resMatch != null) {
+      final fromBase = eqMatch.group(1);
+      final input = eqMatch.group(2);
+      final toBase = resMatch.group(1);
+      setState(() {
+        _fromBase = fromBase ?? 'Decimal';
+        _toBase = toBase ?? 'Binary';
+        _inputController.text = input ?? '';
+        _convert();
+      });
     }
   }
 

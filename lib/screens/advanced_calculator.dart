@@ -6,15 +6,31 @@ import 'dart:convert';
 import 'package:intl/intl.dart';
 
 class AdvancedCalculator extends StatefulWidget {
+  final String? initialEquation;
+  final void Function(AdvancedCalculatorState)? onCalculatorCreated;
+  AdvancedCalculator({this.initialEquation, this.onCalculatorCreated});
   @override
-  _AdvancedCalculatorState createState() => _AdvancedCalculatorState();
+  AdvancedCalculatorState createState() => AdvancedCalculatorState();
 }
 
-class _AdvancedCalculatorState extends State<AdvancedCalculator> {
+class AdvancedCalculatorState extends State<AdvancedCalculator> {
   String _equation = "0";
   String _result = "0";
   bool _isNewNumber = true;
   bool _justCalculated = false; // Track if last button was '='
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.onCalculatorCreated != null) {
+      widget.onCalculatorCreated!(this);
+    }
+    if (widget.initialEquation != null && widget.initialEquation!.isNotEmpty) {
+      _equation = widget.initialEquation!;
+      _isNewNumber = false;
+      _updateResultRealtime();
+    }
+  }
 
   void _buttonPressed(String buttonText) {
     setState(() {
@@ -245,6 +261,15 @@ class _AdvancedCalculatorState extends State<AdvancedCalculator> {
         ),
       ),
     );
+  }
+
+  void setEquationFromHistory(String equation) {
+    setState(() {
+      _equation = equation;
+      _isNewNumber = false;
+      _justCalculated = false;
+      _updateResultRealtime();
+    });
   }
 
   @override

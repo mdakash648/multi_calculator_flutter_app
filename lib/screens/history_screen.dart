@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'advanced_calculator.dart';
 
 class HistoryScreen extends StatefulWidget {
+  final void Function(String type, String equation, String result)?
+      onSelectHistory;
+  HistoryScreen({this.onSelectHistory});
   @override
   _HistoryScreenState createState() => _HistoryScreenState();
 }
@@ -93,6 +97,66 @@ class _HistoryScreenState extends State<HistoryScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to delete item')),
       );
+    }
+  }
+
+  Future<void> _editItem(HistoryItem item, int index) async {
+    final equationController = TextEditingController(text: item.equation);
+    final resultController = TextEditingController(text: item.result);
+    final theme = Theme.of(context);
+    final edited = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Edit History Item'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: equationController,
+              decoration: InputDecoration(labelText: 'Equation'),
+            ),
+            TextField(
+              controller: resultController,
+              decoration: InputDecoration(labelText: 'Result'),
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text('Save'),
+            style: TextButton.styleFrom(
+                foregroundColor: theme.colorScheme.primary),
+          ),
+        ],
+      ),
+    );
+    if (edited == true) {
+      final newEquation = equationController.text.trim();
+      final newResult = resultController.text.trim();
+      if (newEquation.isNotEmpty && newResult.isNotEmpty) {
+        final updatedItem = HistoryItem(
+          equation: newEquation,
+          result: newResult,
+          timestamp: item.timestamp,
+          type: item.type,
+        );
+        setState(() {
+          _historyItems[index] = updatedItem;
+        });
+        final prefs = await SharedPreferences.getInstance();
+        final historyJson =
+            _historyItems.map((item) => jsonEncode(item.toJson())).toList();
+        await prefs.setStringList('calculation_history', historyJson);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('History item updated')),
+        );
+      }
     }
   }
 
@@ -205,10 +269,26 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 ),
               ],
             ),
-            trailing: IconButton(
-              icon: Icon(Icons.delete_outline, color: Colors.red),
-              onPressed: () => _deleteItem(item),
-              tooltip: 'Delete this item',
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: Icon(Icons.edit, color: theme.colorScheme.primary),
+                  onPressed: () {
+                    if (widget.onSelectHistory != null) {
+                      widget.onSelectHistory!(
+                          item.type, item.equation, item.result);
+                      Navigator.of(context).pop();
+                    }
+                  },
+                  tooltip: 'Edit this item',
+                ),
+                IconButton(
+                  icon: Icon(Icons.delete_outline, color: Colors.red),
+                  onPressed: () => _deleteItem(item),
+                  tooltip: 'Delete this item',
+                ),
+              ],
             ),
             onTap: () {
               // Copy to clipboard
