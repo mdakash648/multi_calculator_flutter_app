@@ -65,7 +65,6 @@ class _AdvancedCalculatorState extends State<AdvancedCalculator> {
       double evalResult = exp.evaluate(EvaluationType.REAL, cm);
 
       _result = _formatResult(evalResult);
-      _equation = _result;
       _isNewNumber = true;
       _justCalculated = true;
 
@@ -160,6 +159,21 @@ class _AdvancedCalculatorState extends State<AdvancedCalculator> {
       } else {
         _equation += buttonText;
       }
+    }
+    // Real-time calculation after input
+    _updateResultRealtime();
+  }
+
+  void _updateResultRealtime() {
+    try {
+      String expression = _equation.replaceAll('×', '*').replaceAll('÷', '/');
+      Parser p = Parser();
+      Expression exp = p.parse(expression);
+      ContextModel cm = ContextModel();
+      double evalResult = exp.evaluate(EvaluationType.REAL, cm);
+      _result = _formatResult(evalResult);
+    } catch (e) {
+      _result = ""; // Or set to 'Error' if you prefer
     }
   }
 
