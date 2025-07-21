@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math';
 import 'dart:convert';
 import 'package:intl/intl.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 class AdvancedCalculator extends StatefulWidget {
   final String? initialEquation;
@@ -14,6 +16,7 @@ class AdvancedCalculator extends StatefulWidget {
 }
 
 class AdvancedCalculatorState extends State<AdvancedCalculator> {
+  final GlobalKey _firstButtonKey = GlobalKey();
   String _equation = "0";
   String _result = "0";
   bool _isNewNumber = true;
@@ -209,7 +212,12 @@ class AdvancedCalculatorState extends State<AdvancedCalculator> {
     _justCalculated = false;
   }
 
-  Widget _buildButton(String text, {Color? backgroundColor, Color? textColor}) {
+  Widget _buildButton(String text,
+      {Key? key,
+      Color? backgroundColor,
+      Color? textColor,
+      double? windowWidth,
+      bool? isWindows}) {
     final theme = Theme.of(context);
     Color bg;
     Color fg;
@@ -225,7 +233,8 @@ class AdvancedCalculatorState extends State<AdvancedCalculator> {
       fg = isDark ? Colors.black : Colors.black87;
     }
 
-    return Container(
+    Widget button = Container(
+      key: key,
       margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
       child: Material(
         elevation: 2,
@@ -261,6 +270,15 @@ class AdvancedCalculatorState extends State<AdvancedCalculator> {
         ),
       ),
     );
+
+    // Apply 67:35 aspect ratio if on Windows and width >= 723px
+    if ((isWindows ?? false) && (windowWidth ?? 0) >= 723) {
+      button = AspectRatio(
+        aspectRatio: 67 / 35,
+        child: button,
+      );
+    }
+    return button;
   }
 
   void setEquationFromHistory(String equation) {
@@ -275,6 +293,32 @@ class AdvancedCalculatorState extends State<AdvancedCalculator> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isWindows = Platform.isWindows;
+    final windowWidth = MediaQuery.of(context).size.width;
+    final displayFlex = isWindows ? 3 : 1;
+    final buttonFlex = isWindows ? 7 : 1;
+    final windowHeight = MediaQuery.of(context).size.height;
+    final useWideMargin = isWindows && windowWidth >= 723;
+    final horizontalMargin = useWideMargin ? windowWidth * 0.1 : 0.0;
+    // Responsive text sizes
+    double equationFontSize = 25;
+    double resultFontSize = 35;
+    if (windowWidth >= 1194) {
+      equationFontSize = 32;
+      resultFontSize = 44;
+    } else if (windowWidth >= 723) {
+      equationFontSize = 28;
+      resultFontSize = 38;
+    }
+    // Get button size for debug
+    Size? buttonSize;
+    final contextButton = _firstButtonKey.currentContext;
+    if (contextButton != null) {
+      final renderBox = contextButton.findRenderObject() as RenderBox?;
+      if (renderBox != null && renderBox.hasSize) {
+        buttonSize = renderBox.size;
+      }
+    }
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -285,12 +329,16 @@ class AdvancedCalculatorState extends State<AdvancedCalculator> {
             mainAxisAlignment:
                 MainAxisAlignment.end, // Align both containers to bottom
             children: [
-              // Display Section
               Expanded(
+                flex: displayFlex,
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(20.0),
-                  margin: const EdgeInsets.only(bottom: 16.0),
+                  margin: EdgeInsets.only(
+                    left: horizontalMargin,
+                    right: horizontalMargin,
+                    bottom: 16.0,
+                  ),
                   decoration: BoxDecoration(
                     color: theme.cardColor,
                     borderRadius: BorderRadius.circular(20),
@@ -314,7 +362,7 @@ class AdvancedCalculatorState extends State<AdvancedCalculator> {
                           child: Text(
                             _equation,
                             style: TextStyle(
-                              fontSize: 25,
+                              fontSize: equationFontSize,
                               color: theme.hintColor,
                               fontWeight: FontWeight.w500,
                             ),
@@ -334,7 +382,7 @@ class AdvancedCalculatorState extends State<AdvancedCalculator> {
                           child: Text(
                             _result,
                             style: TextStyle(
-                              fontSize: 35,
+                              fontSize: resultFontSize,
                               fontWeight: FontWeight.bold,
                               color: theme.colorScheme.primary,
                             ),
@@ -345,110 +393,163 @@ class AdvancedCalculatorState extends State<AdvancedCalculator> {
                   ),
                 ),
               ),
-
-              // Buttons Section
-              Container(
-                height: 350, // Fixed height of 400px
-                padding: const EdgeInsets.all(
-                    8), // Reduced padding for tighter layout
-                decoration: BoxDecoration(
-                  color: theme.cardColor,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 0,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisAlignment:
-                      MainAxisAlignment.end, // Align buttons to bottom
-                  children: [
-                    // First Row
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Expanded(
-                              child: _buildButton("C",
-                                  backgroundColor: Colors.redAccent,
-                                  textColor: Colors.white)),
-                          Expanded(
-                              child: _buildButton("⌫",
-                                  backgroundColor: Colors.orange,
-                                  textColor: Colors.white)),
-                          Expanded(
-                              child: _buildButton("x²",
-                                  backgroundColor: theme.colorScheme.primary,
-                                  textColor: Colors.white)),
-                          Expanded(
-                              child: _buildButton("÷",
-                                  backgroundColor: theme.colorScheme.primary,
-                                  textColor: Colors.white)),
-                        ],
+              Expanded(
+                flex: buttonFlex,
+                child: Container(
+                  padding: const EdgeInsets.all(
+                      8), // Reduced padding for tighter layout
+                  margin: EdgeInsets.symmetric(horizontal: horizontalMargin),
+                  decoration: BoxDecoration(
+                    color: theme.cardColor,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 0,
+                        offset: const Offset(0, 4),
                       ),
-                    ),
-                    // Second Row
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Expanded(child: _buildButton("7")),
-                          Expanded(child: _buildButton("8")),
-                          Expanded(child: _buildButton("9")),
-                          Expanded(
-                              child: _buildButton("×",
-                                  backgroundColor: theme.colorScheme.primary,
-                                  textColor: Colors.white)),
-                        ],
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisAlignment:
+                        MainAxisAlignment.end, // Align buttons to bottom
+                    children: [
+                      // First Row
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Expanded(
+                                child: _buildButton("C",
+                                    key: _firstButtonKey,
+                                    backgroundColor: Colors.redAccent,
+                                    textColor: Colors.white,
+                                    windowWidth: windowWidth,
+                                    isWindows: isWindows)),
+                            Expanded(
+                                child: _buildButton("⌫",
+                                    backgroundColor: Colors.orange,
+                                    textColor: Colors.white,
+                                    windowWidth: windowWidth,
+                                    isWindows: isWindows)),
+                            Expanded(
+                                child: _buildButton("x²",
+                                    backgroundColor: theme.colorScheme.primary,
+                                    textColor: Colors.white,
+                                    windowWidth: windowWidth,
+                                    isWindows: isWindows)),
+                            Expanded(
+                                child: _buildButton("÷",
+                                    backgroundColor: theme.colorScheme.primary,
+                                    textColor: Colors.white,
+                                    windowWidth: windowWidth,
+                                    isWindows: isWindows)),
+                          ],
+                        ),
                       ),
-                    ),
-                    // Third Row
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Expanded(child: _buildButton("4")),
-                          Expanded(child: _buildButton("5")),
-                          Expanded(child: _buildButton("6")),
-                          Expanded(
-                              child: _buildButton("-",
-                                  backgroundColor: theme.colorScheme.primary,
-                                  textColor: Colors.white)),
-                        ],
+                      // Second Row
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Expanded(
+                                child: _buildButton("7",
+                                    windowWidth: windowWidth,
+                                    isWindows: isWindows)),
+                            Expanded(
+                                child: _buildButton("8",
+                                    windowWidth: windowWidth,
+                                    isWindows: isWindows)),
+                            Expanded(
+                                child: _buildButton("9",
+                                    windowWidth: windowWidth,
+                                    isWindows: isWindows)),
+                            Expanded(
+                                child: _buildButton("×",
+                                    backgroundColor: theme.colorScheme.primary,
+                                    textColor: Colors.white,
+                                    windowWidth: windowWidth,
+                                    isWindows: isWindows)),
+                          ],
+                        ),
                       ),
-                    ),
-                    // Fourth Row
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Expanded(child: _buildButton("1")),
-                          Expanded(child: _buildButton("2")),
-                          Expanded(child: _buildButton("3")),
-                          Expanded(
-                              child: _buildButton("+",
-                                  backgroundColor: theme.colorScheme.primary,
-                                  textColor: Colors.white)),
-                        ],
+                      // Third Row
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Expanded(
+                                child: _buildButton("4",
+                                    windowWidth: windowWidth,
+                                    isWindows: isWindows)),
+                            Expanded(
+                                child: _buildButton("5",
+                                    windowWidth: windowWidth,
+                                    isWindows: isWindows)),
+                            Expanded(
+                                child: _buildButton("6",
+                                    windowWidth: windowWidth,
+                                    isWindows: isWindows)),
+                            Expanded(
+                                child: _buildButton("-",
+                                    backgroundColor: theme.colorScheme.primary,
+                                    textColor: Colors.white,
+                                    windowWidth: windowWidth,
+                                    isWindows: isWindows)),
+                          ],
+                        ),
                       ),
-                    ),
-                    // Fifth Row
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Expanded(
-                              child: _buildButton("√",
-                                  backgroundColor: theme.colorScheme.primary,
-                                  textColor: Colors.white)),
-                          Expanded(child: _buildButton("0")),
-                          Expanded(child: _buildButton(".")),
-                          Expanded(
-                              child: _buildButton("=",
-                                  backgroundColor: Colors.green,
-                                  textColor: Colors.white)),
-                        ],
+                      // Fourth Row
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Expanded(
+                                child: _buildButton("1",
+                                    windowWidth: windowWidth,
+                                    isWindows: isWindows)),
+                            Expanded(
+                                child: _buildButton("2",
+                                    windowWidth: windowWidth,
+                                    isWindows: isWindows)),
+                            Expanded(
+                                child: _buildButton("3",
+                                    windowWidth: windowWidth,
+                                    isWindows: isWindows)),
+                            Expanded(
+                                child: _buildButton("+",
+                                    backgroundColor: theme.colorScheme.primary,
+                                    textColor: Colors.white,
+                                    windowWidth: windowWidth,
+                                    isWindows: isWindows)),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                      // Fifth Row
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Expanded(
+                                child: _buildButton("√",
+                                    backgroundColor: theme.colorScheme.primary,
+                                    textColor: Colors.white,
+                                    windowWidth: windowWidth,
+                                    isWindows: isWindows)),
+                            Expanded(
+                                child: _buildButton("0",
+                                    windowWidth: windowWidth,
+                                    isWindows: isWindows)),
+                            Expanded(
+                                child: _buildButton(".",
+                                    windowWidth: windowWidth,
+                                    isWindows: isWindows)),
+                            Expanded(
+                                child: _buildButton("=",
+                                    backgroundColor: Colors.green,
+                                    textColor: Colors.white,
+                                    windowWidth: windowWidth,
+                                    isWindows: isWindows)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
